@@ -1,0 +1,13 @@
+name: ScaleCloudGo
+targets:
+  ScaleCloudGo:
+    type: framework
+    platform: iOS
+    settings:
+      SKIP_INSTALL: "NO"
+      BUILD_LIBRARY_FOR_DISTRIBUTION: "YES"
+    buildPhases:
+      - script: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          gomobile bind -target=ios/arm64 -o "$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework" "$PROJECT_DIR"
+

@@ -1,0 +1,8 @@
+framework module "SCGo" {
+	header "ref.h"
+    header "SCGo.objc.h"
+    header "Universe.objc.h"
+    header "SCGo.h"
+
+    export *
+}
