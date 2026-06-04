@@ -6,6 +6,7 @@ targets:
     settings:
       SKIP_INSTALL: "NO"
       BUILD_LIBRARY_FOR_DISTRIBUTION: "YES"
+    deploymentTarget: "14.0"
     buildPhases:
       - script: |
           export PATH="$PATH:$(go env GOPATH)/bin"
