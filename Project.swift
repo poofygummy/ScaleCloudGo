@@ -2,12 +2,6 @@ import ProjectDescription
 
 let project = Project(
     name: "ScaleCloudGo",
-    settings: .settings(base: [
-        "SKIP_INSTALL": "NO",
-        "BUILD_LIBRARY_FOR_DISTRIBUTION": "YES",
-        "DEFINES_MODULE": "NO",
-        "PRODUCT_MODULE_NAME": "ScaleCloudGo"
-    ]),
     targets: [
         .target(
             name: "ScaleCloudGo",
@@ -18,14 +12,14 @@ let project = Project(
             infoPlist: .default,
             sources: [],
             scripts: [
-                .pre(
+                .post(
                     script: """
                     export PATH="$PATH:$(go env GOPATH)/bin"
                     
                     TARGET_FRAMEWORK="$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework"
                     TMP_XCFRAMEWORK="$TEMP_DIR/ScaleCloudGo.xcframework"
                     
-                    # Wipe any stale files from the environment
+                    # Wipe any stale files or Xcode placeholders
                     rm -rf "$TARGET_FRAMEWORK"
                     rm -rf "$TMP_XCFRAMEWORK"
                     
@@ -37,7 +31,13 @@ let project = Project(
                     """,
                     name: "Build Go Framework"
                 )
-            ]
+            ],
+            settings: .settings(base: [
+                "SKIP_INSTALL": "NO",
+                "BUILD_LIBRARY_FOR_DISTRIBUTION": "YES",
+                "DEFINES_MODULE": "NO",
+                "PRODUCT_MODULE_NAME": "ScaleCloudGo"
+            ])
         )
     ]
 )
