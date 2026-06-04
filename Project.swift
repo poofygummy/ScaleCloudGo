@@ -38,7 +38,8 @@ let project = Project(
                 "DEFINES_MODULE": "NO",
                 "PRODUCT_MODULE_NAME": "ScaleCloudGo",
                 "DEBUG_INFORMATION_FORMAT": "dwarf",
-                "EAGER_LINKING": "NO"
+                "EAGER_LINKING": "NO",
+                "SUPPORTS_TEXT_BASED_API": "NO"
             ])
         )
     ]
