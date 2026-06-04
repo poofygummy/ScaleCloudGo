@@ -21,7 +21,7 @@ let project = Project(
                 .pre(
                     script: """
                     export PATH="$PATH:$(go env GOPATH)/bin"
-                    gomobile bind -target=ios/arm64 -o "$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework" "$PROJECT_DIR"
+                    gomobile bind -target=ios/arm64 -o "$BUILT_PRODUCTS_DIR/ScaleCloudGo.xcframework" "$PROJECT_DIR"
                     """,
                     name: "Build Go Framework"
                 )
