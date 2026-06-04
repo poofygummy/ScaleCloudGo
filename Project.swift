@@ -36,7 +36,8 @@ let project = Project(
                 "SKIP_INSTALL": "NO",
                 "BUILD_LIBRARY_FOR_DISTRIBUTION": "YES",
                 "DEFINES_MODULE": "NO",
-                "PRODUCT_MODULE_NAME": "ScaleCloudGo"
+                "PRODUCT_MODULE_NAME": "ScaleCloudGo",
+                "DEBUG_INFORMATION_FORMAT": "dwarf"
             ])
         )
     ]
