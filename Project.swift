@@ -6,7 +6,7 @@ let project = Project(
         .target(
             name: "ScaleCloudGo",
             destinations: .iOS,
-            product: .framework,
+            product: .staticFramework,
             bundleId: "com.scalecloud.ScaleCloudGo",
             deploymentTargets: .iOS("14.0"),
             infoPlist: .default,
@@ -15,19 +15,27 @@ let project = Project(
                 .post(
                     script: """
                     export PATH="$PATH:$(go env GOPATH)/bin"
-                    
+        
                     TARGET_FRAMEWORK="$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework"
                     TMP_XCFRAMEWORK="$TEMP_DIR/ScaleCloudGo.xcframework"
-                    
-                    # Wipe any stale files or Xcode placeholders
+        
                     rm -rf "$TARGET_FRAMEWORK"
                     rm -rf "$TMP_XCFRAMEWORK"
-                    
-                    # Force Go to generate the xcframework package structure
+        
                     gomobile bind -target=ios/arm64 -o "$TMP_XCFRAMEWORK" "$PROJECT_DIR"
-                    
-                    # Extract the standalone arm64 framework bundle directly into Xcode's target product path
+        
+                    # Copy the framework
                     cp -R "$TMP_XCFRAMEWORK/ios-arm64/ScaleCloudGo.framework" "$TARGET_FRAMEWORK"
+        
+                    # Ensure module map exists and is valid for Swift
+                    MODULEMAP="$TARGET_FRAMEWORK/Modules/module.modulemap"
+                    if [ ! -f "$MODULEMAP" ]; then
+                        mkdir -p "$TARGET_FRAMEWORK/Modules"
+                        echo 'framework module ScaleCloudGo {' > "$MODULEMAP"
+                        echo '  umbrella header "ScaleCloudGo.h"' >> "$MODULEMAP"
+                        echo '  export *' >> "$MODULEMAP"
+                        echo '}' >> "$MODULEMAP"
+                    fi
                     """,
                     name: "Build Go Framework"
                 )
