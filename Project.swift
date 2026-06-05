@@ -6,7 +6,7 @@ let project = Project(
         .target(
             name: "ScaleCloudGo",
             destinations: .iOS,
-            product: .staticFramework,
+            product: .framework,
             bundleId: "com.scalecloud.ScaleCloudGo",
             deploymentTargets: .iOS("14.0"),
             infoPlist: .default,
