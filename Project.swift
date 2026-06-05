@@ -41,7 +41,7 @@ fi
             settings: .settings(base: [
                 "SKIP_INSTALL": "NO",
                 "BUILD_LIBRARY_FOR_DISTRIBUTION": "YES",
-                "DEFINES_MODULE": "NO",
+                "DEFINES_MODULE": "YES",
                 "PRODUCT_MODULE_NAME": "ScaleCloudGo",
                 "DEBUG_INFORMATION_FORMAT": "dwarf",
                 "EAGER_LINKING": "NO",
