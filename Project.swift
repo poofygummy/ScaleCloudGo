@@ -14,29 +14,27 @@ let project = Project(
             scripts: [
                 .post(
                     script: """
-                    export PATH="$PATH:$(go env GOPATH)/bin"
-        
-                    TARGET_FRAMEWORK="$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework"
-                    TMP_XCFRAMEWORK="$TEMP_DIR/ScaleCloudGo.xcframework"
-        
-                    rm -rf "$TARGET_FRAMEWORK"
-                    rm -rf "$TMP_XCFRAMEWORK"
-        
-                    gomobile bind -target=ios/arm64 -o "$TMP_XCFRAMEWORK" "$PROJECT_DIR"
-        
-                    # Copy the framework
-                    cp -R "$TMP_XCFRAMEWORK/ios-arm64/ScaleCloudGo.framework" "$TARGET_FRAMEWORK"
-        
-                    # Ensure module map exists and is valid for Swift
-                    MODULEMAP="$TARGET_FRAMEWORK/Modules/module.modulemap"
-                    if [ ! -f "$MODULEMAP" ]; then
-                        mkdir -p "$TARGET_FRAMEWORK/Modules"
-                        echo 'framework module ScaleCloudGo {' > "$MODULEMAP"
-                        echo '  umbrella header "ScaleCloudGo.h"' >> "$MODULEMAP"
-                        echo '  export *' >> "$MODULEMAP"
-                        echo '}' >> "$MODULEMAP"
-                    fi
-                    """,
+export PATH="$PATH:$(go env GOPATH)/bin"
+
+TARGET_FRAMEWORK="$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework"
+TMP_XCFRAMEWORK="$TEMP_DIR/ScaleCloudGo.xcframework"
+
+rm -rf "$TARGET_FRAMEWORK"
+rm -rf "$TMP_XCFRAMEWORK"
+
+gomobile bind -target=ios/arm64 -o "$TMP_XCFRAMEWORK" "$PROJECT_DIR"
+
+cp -R "$TMP_XCFRAMEWORK/ios-arm64/ScaleCloudGo.framework" "$TARGET_FRAMEWORK"
+
+MODULEMAP="$TARGET_FRAMEWORK/Modules/module.modulemap"
+if [ ! -f "$MODULEMAP" ]; then
+    mkdir -p "$TARGET_FRAMEWORK/Modules"
+    echo 'framework module ScaleCloudGo {' > "$MODULEMAP"
+    echo '  umbrella header "ScaleCloudGo.h"' >> "$MODULEMAP"
+    echo '  export *' >> "$MODULEMAP"
+    echo '}' >> "$MODULEMAP"
+fi
+""",
                     name: "Build Go Framework"
                 )
             ],
