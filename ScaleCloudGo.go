@@ -1,4 +1,4 @@
-package SCGo
+package ScaleCloudGo
 
 import (
     "context"
