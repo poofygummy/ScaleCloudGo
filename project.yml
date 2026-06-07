@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Nextcloud GmbH and Nextcloud contributors
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# ScaleCloudGo xcodegen spec (restored from historical state).
+# This layer is special: it builds the Go/Tailscale xcframework via gomobile bind
+# when no prebuilt is present under prebuilt/.
+
+name: ScaleCloudGo
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+targets:
+  ScaleCloudGo:
+    type: framework
+    platform: iOS
+    deploymentTarget: "14.0"
+    settings:
+      SKIP_INSTALL: "NO"
+      BUILD_LIBRARY_FOR_DISTRIBUTION: "YES"
+      DEFINES_MODULE: "YES"
+      PRODUCT_MODULE_NAME: "ScaleCloudGo"
+    buildPhases:
+      - script: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          gomobile bind -target=ios/arm64 -o "$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework" "$PROJECT_DIR"
+        name: Build Go Framework
