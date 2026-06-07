@@ -17,21 +17,22 @@ ScaleCloudGo/prebuilt/
   - `ScaleCloudGo-xcarchive`
   - `ScaleCloudGo-prebuilt` (clean tree ready for Kit/App consumption)
 - To build *only* Kit/App/Wrap without re-running Go+gomobile:
-  - In the target workflow (SCKit/SCApp/SCWrap) supply the prior `go_run_id` as a `workflow_dispatch` input.
-  - The workflow does `download-artifact` of `ScaleCloudGo-prebuilt` and unpacks it verbatim under `ScaleCloudGo/prebuilt/`.
-- The xcodegen spec (`project.yml`) used inside the GitHub job, or any gomobile command executed inside that same job, will look under `prebuilt/` first. The job is what materializes the prebuilt (via artifact download when a prior run id was supplied) before it starts its own work.
+  - Download the `ScaleCloudGo-prebuilt` artifact from that successful run in the GitHub UI.
+  - Manually unpack it into your clone so the contents land under `ScaleCloudGo/prebuilt/` (you should end up with `ScaleCloudGo/prebuilt/ScaleCloudGo.xcframework` or `.framework`).
+  - Then dispatch the higher layer's workflow (`testbuildSCKit.yml`, etc.). The higher workflow will only check that the prebuilt tree is already there; it will not download anything itself.
+- The xcodegen spec and any build-phase logic in a higher job simply look for the framework under `prebuilt/`. The human is responsible for making sure it is present in the tree at dispatch time.
 
 **There is no supported local build for this layer.**
 
 The only place `ScaleCloudGo` (and its `gomobile bind` step) is built is inside the official **Build ScaleCloudGo** GitHub Actions workflow (`testbuildSCGo.yml`).
 
 To provide a prebuilt for a Kit / App / Wrap dispatch:
-- Dispatch the Go workflow (or use the run id of a prior successful run).
-- Download the `ScaleCloudGo-prebuilt` artifact from that run.
-- Unpack it so its contents land under `ScaleCloudGo/prebuilt/` in a clone (or let the consuming layer's workflow do the `actions/download-artifact + materialize` step for you).
-- Then dispatch the next layer's workflow (supplying the `go_run_id` if the higher workflow supports it).
+- Dispatch the Go workflow.
+- After success, download the `ScaleCloudGo-prebuilt` artifact from the GitHub UI (Actions → the run → Artifacts).
+- Unpack the artifact contents by hand (unzip/copy) into your clone so they land correctly under `ScaleCloudGo/prebuilt/`.
+- Then dispatch the next layer's workflow. The higher workflow sees the prebuilt you placed there and skips Go work entirely.
 
-The Go workflow is the only workflow permitted to install the Go toolchain and gomobile. Higher workflows that receive a valid prior Go prebuilt must not pay that cost.
+The Go workflow is the only workflow permitted to install the Go toolchain and gomobile. Any higher workflow that finds a prebuilt already present in the tree must not pay that cost.
 
 ## Used by
 
