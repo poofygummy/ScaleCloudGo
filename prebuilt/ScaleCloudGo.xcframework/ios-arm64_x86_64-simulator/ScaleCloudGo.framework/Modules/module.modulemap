@@ -1,0 +1,8 @@
+framework module "ScaleCloudGo" {
+	header "ref.h"
+    header "ScaleCloudGo.objc.h"
+    header "Universe.objc.h"
+    header "ScaleCloudGo.h"
+
+    export *
+}
