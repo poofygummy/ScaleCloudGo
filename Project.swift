@@ -14,17 +14,23 @@ let project = Project(
             scripts: [
                 .post(
                     script: """
-export PATH="$PATH:$(go env GOPATH)/bin"
-
 TARGET_FRAMEWORK="$BUILT_PRODUCTS_DIR/ScaleCloudGo.framework"
-TMP_XCFRAMEWORK="$TEMP_DIR/ScaleCloudGo.xcframework"
+PREBUILT_XCFRAMEWORK="$PROJECT_DIR/prebuilt/ScaleCloudGo.xcframework"
 
-rm -rf "$TARGET_FRAMEWORK"
-rm -rf "$TMP_XCFRAMEWORK"
-
-gomobile bind -target=ios/arm64 -o "$TMP_XCFRAMEWORK" "$PROJECT_DIR"
-
-cp -R "$TMP_XCFRAMEWORK/ios-arm64/ScaleCloudGo.framework" "$TARGET_FRAMEWORK"
+# If prebuilt exists, use it instead of rebuilding
+if [ -d "$PREBUILT_XCFRAMEWORK" ]; then
+    echo "Using prebuilt ScaleCloudGo.xcframework"
+    rm -rf "$TARGET_FRAMEWORK"
+    cp -R "$PREBUILT_XCFRAMEWORK/ios-arm64/ScaleCloudGo.framework" "$TARGET_FRAMEWORK"
+else
+    echo "Building ScaleCloudGo from source"
+    export PATH="$PATH:$(go env GOPATH)/bin"
+    TMP_XCFRAMEWORK="$TEMP_DIR/ScaleCloudGo.xcframework"
+    rm -rf "$TARGET_FRAMEWORK"
+    rm -rf "$TMP_XCFRAMEWORK"
+    gomobile bind -target=ios/arm64 -o "$TMP_XCFRAMEWORK" "$PROJECT_DIR"
+    cp -R "$TMP_XCFRAMEWORK/ios-arm64/ScaleCloudGo.framework" "$TARGET_FRAMEWORK"
+fi
 """,
                     name: "Build Go Framework"
                 )
