@@ -6,8 +6,6 @@
 # when no prebuilt is present under prebuilt/.
 
 name: ScaleCloudGo
-options:
-  xcodeVersion: "15.4"
 settings:
   base:
     IPHONEOS_DEPLOYMENT_TARGET: "14.0"
