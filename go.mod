@@ -1,4 +1,4 @@
-module com.scalecloud
+module scalecloud
 
 go 1.26.3
 
