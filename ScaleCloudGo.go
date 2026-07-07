@@ -50,8 +50,6 @@ func GetLogs() string {
 
 func init() {
 	os.Setenv("TS_AUTHKEY", "")
-	os.Setenv("TS_OAUTH_CLIENT_ID", tsClientID)
-	os.Setenv("TS_OAUTH_CLIENT_SECRET", tsClientSecret)
 }
 
 // TailScale Address Helper
@@ -82,11 +80,13 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 	defer nodeMX.Unlock()
 	if tsNode == nil {
 		tsNode = &tsnet.Server{
-			Hostname:   hostname,
-			Ephemeral:  false,
-			Logf:       tsLog,
-			Dir:        stateDir,
-			ControlURL: "https://controlplane.tailscale.com",
+			Hostname:      hostname,
+			Ephemeral:     false,
+			Logf:          tsLog,
+			Dir:           stateDir,
+			ControlURL:    "https://controlplane.tailscale.com",
+			ClientSecret:  tsClientSecret,
+			AdvertiseTags: []string{"tag:scalecloud-ios"},
 		}
 		os.Setenv("TS_LOGS_DIR", stateDir)
 		err := tsNode.Start()
