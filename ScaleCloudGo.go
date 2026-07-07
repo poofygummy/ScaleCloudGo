@@ -2,6 +2,7 @@ package ScaleCloudGo
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/elazarl/goproxy"
 	"tailscale.com/tsnet"
-	"tailscale.com/types/logger"
+	// "tailscale.com/types/logger"
 	// "tailscale.com/net/netmon"
 	// "github.com/wlynxg/anet"
 	// "strconv"
@@ -22,6 +23,30 @@ import (
 // TailScale Netstack usage and OAuth preset
 const tsClientID = "kRkUEfX6op11CNTRL"
 const tsClientSecret = "tskey-client-kRkUEfX6op11CNTRL-RYXbEQR7XmfneD1PrCKPnfc5DqKW6HT8E"
+
+// --- DIAGNOSTICS ---
+
+var logMX sync.Mutex
+var logLines []string
+
+func tsLog(format string, args ...any) {
+	line := fmt.Sprintf(format, args...)
+	logMX.Lock()
+	logLines = append(logLines, line)
+	if len(logLines) > 200 {
+		logLines = logLines[len(logLines)-200:]
+	}
+	logMX.Unlock()
+}
+
+// GetLogs returns all captured tsnet log lines as a single newline-joined string.
+func GetLogs() string {
+	logMX.Lock()
+	defer logMX.Unlock()
+	result := strings.Join(logLines, "\n")
+	logLines = nil // clear after read
+	return result
+}
 
 func init() {
 	os.Setenv("TS_AUTHKEY", "")
@@ -58,7 +83,7 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 		tsNode = &tsnet.Server{
 			Hostname:     hostname,
 			Ephemeral:    false,
-			Logf:         logger.Discard,
+			Logf:         tsLog,
 			Dir:          stateDir,
 			ControlURL:   "https://controlplane.tailscale.com",
 			ClientSecret: tsClientSecret,
@@ -110,6 +135,7 @@ func StartProxy(hostname, stateDir string) (int, error) {
 		if isTailscaleAddress(host) {
 			err := ensureTSNodeActive(hostname, stateDir)
 			if err != nil {
+				tsLog("ensureTSNodeActive: Start() failed: %v", err)
 				return nil, err
 			}
 			state, err := tsNode.Up(ctx)
