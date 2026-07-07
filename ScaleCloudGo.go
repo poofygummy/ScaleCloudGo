@@ -81,12 +81,13 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 	defer nodeMX.Unlock()
 	if tsNode == nil {
 		tsNode = &tsnet.Server{
-			Hostname:     hostname,
-			Ephemeral:    false,
-			Logf:         tsLog,
-			Dir:          stateDir,
-			ControlURL:   "https://controlplane.tailscale.com",
-			ClientSecret: tsClientSecret,
+			Hostname:      hostname,
+			Ephemeral:     false,
+			Logf:          tsLog,
+			Dir:           stateDir,
+			ControlURL:    "https://controlplane.tailscale.com",
+			ClientSecret:  tsClientSecret,
+			AdvertiseTags: []string{"tag:scalecloud"},
 		}
 		os.Setenv("TS_LOGS_DIR", stateDir)
 		err := tsNode.Start()
