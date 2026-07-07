@@ -11,6 +11,11 @@
 #include "Universe.objc.h"
 
 
+/**
+ * GetLogs returns all captured tsnet log lines as a single newline-joined string.
+ */
+FOUNDATION_EXPORT NSString* _Nonnull ScaleCloudGoGetLogs(void);
+
 FOUNDATION_EXPORT BOOL ScaleCloudGoStartProxy(NSString* _Nullable hostname, NSString* _Nullable stateDir, long* _Nullable ret0_, NSError* _Nullable* _Nullable error);
 
 FOUNDATION_EXPORT BOOL ScaleCloudGoStopProxy(NSError* _Nullable* _Nullable error);
