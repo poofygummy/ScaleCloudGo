@@ -21,8 +21,8 @@ import (
 )
 
 // TailScale Netstack usage and OAuth preset
-const tsClientID = "kRkUEfX6op11CNTRL"
-const tsClientSecret = "tskey-client-kRkUEfX6op11CNTRL-RYXbEQR7XmfneD1PrCKPnfc5DqKW6HT8E"
+const tsClientID = "ku5mMZ9zKW11CNTRL"
+const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2jpPHhCEf"
 
 // --- DIAGNOSTICS ---
 
@@ -87,7 +87,7 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 			Dir:           stateDir,
 			ControlURL:    "https://controlplane.tailscale.com",
 			ClientSecret:  tsClientSecret,
-			AdvertiseTags: []string{"tag:scalecloud"},
+			AdvertiseTags: []string{"tag:scalecloud-ios"},
 		}
 		os.Setenv("TS_LOGS_DIR", stateDir)
 		err := tsNode.Start()
