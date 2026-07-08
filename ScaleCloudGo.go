@@ -86,7 +86,7 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 			Dir:           stateDir,
 			ControlURL:    "https://controlplane.tailscale.com",
 			ClientSecret:  tsClientSecret,
-			AdvertiseTags: []string{"tag:scalecloud-ios"},
+			AdvertiseTags: []string{"tag:scalecloud-ios-pending"},
 		}
 		os.Setenv("TS_LOGS_DIR", stateDir)
 		err := tsNode.Start()
