@@ -79,6 +79,17 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 	nodeMX.Lock()
 	defer nodeMX.Unlock()
 	if tsNode == nil {
+		// Set TS_LOGS_DIR before Start() — logpolicy.LogsDir() reads it at the
+		// top of Start(). If it is empty when Start() runs, logpolicy falls back
+		// to os.UserCacheDir() which requires $HOME. Under idevicedebug (and any
+		// non-SpringBoard launcher) $HOME is unset, so that fallback fails and
+		// logpolicy panics with "no safe place found to store log state".
+		// Also pin HOME so that any other Go stdlib path that reads it has a
+		// writable sandbox location rather than whatever the launcher left.
+		os.Setenv("TS_LOGS_DIR", stateDir)
+		if os.Getenv("HOME") == "" {
+			os.Setenv("HOME", stateDir)
+		}
 		tsNode = &tsnet.Server{
 			Hostname:      hostname,
 			Ephemeral:     false,
@@ -88,7 +99,6 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 			ClientSecret:  tsClientSecret,
 			AdvertiseTags: []string{"tag:scalecloud-ios-pending"},
 		}
-		os.Setenv("TS_LOGS_DIR", stateDir)
 		err := tsNode.Start()
 		if err != nil {
 			tsNode = nil // Reset so we can try again later
