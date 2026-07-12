@@ -31,6 +31,8 @@ var logLines []string
 
 func tsLog(format string, args ...any) {
 	line := fmt.Sprintf(format, args...)
+	// Print immediately to stdout so idevicedebug captures it live.
+	fmt.Println("[tsnet]", line)
 	logMX.Lock()
 	logLines = append(logLines, line)
 	if len(logLines) > 200 {
@@ -104,6 +106,33 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 			tsNode = nil // Reset so we can try again later
 			return err
 		}
+		// Start a background goroutine that polls the IPN state machine and
+		// prints it to stdout every 5 s so we can see it live in idevicedebug.
+		go func(srv *tsnet.Server) {
+			for {
+				time.Sleep(5 * time.Second)
+				nodeMX.Lock()
+				alive := tsNode == srv
+				nodeMX.Unlock()
+				if !alive {
+					return
+				}
+				lc, err := srv.LocalClient()
+				if err != nil {
+					fmt.Printf("[tsnet-poll] LocalClient error: %v\n", err)
+					continue
+				}
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				st, err := lc.Status(ctx)
+				cancel()
+				if err != nil {
+					fmt.Printf("[tsnet-poll] Status error: %v\n", err)
+					continue
+				}
+				fmt.Printf("[tsnet-poll] BackendState=%s AuthURL=%q IPs=%v\n",
+					st.BackendState, st.AuthURL, st.TailscaleIPs)
+			}
+		}(tsNode)
 	}
 	return nil
 }
