@@ -22,7 +22,11 @@ import (
 
 // TailScale Netstack usage and OAuth preset
 const tsClientID = "ku5mMZ9zKW11CNTRL"
-const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2jpPHhCEf"
+
+// ?ephemeral=false&preauthorized=true: OAuth-generated auth keys are ephemeral
+// by default. The Ephemeral field on tsnet.Server does NOT control this —
+// the OAuth resolver parses these query params from the secret string itself.
+const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2jpPHhCEf?ephemeral=false&preauthorized=true"
 
 // --- DIAGNOSTICS ---
 
@@ -93,8 +97,10 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 			os.Setenv("HOME", stateDir)
 		}
 		tsNode = &tsnet.Server{
-			Hostname:      hostname,
-			Ephemeral:     false,
+			Hostname: hostname,
+			// Ephemeral: false here does nothing when ClientSecret is used —
+			// the ephemeral flag is controlled by the ?ephemeral=false query
+			// param encoded in the tsClientSecret string above.
 			Logf:          tsLog,
 			Dir:           stateDir,
 			ControlURL:    "https://controlplane.tailscale.com",
