@@ -23,10 +23,16 @@ import (
 // TailScale Netstack usage and OAuth preset
 const tsClientID = "ku5mMZ9zKW11CNTRL"
 
-// ?ephemeral=false&preauthorized=true: OAuth-generated auth keys are ephemeral
-// by default. The Ephemeral field on tsnet.Server does NOT control this —
-// the OAuth resolver parses these query params from the secret string itself.
-const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2jpPHhCEf?ephemeral=false&preauthorized=true"
+// ?ephemeral=false: OAuth-generated auth keys are ephemeral by default.
+// The Ephemeral field on tsnet.Server does NOT control this —
+// the OAuth resolver (feature/oauthkey) parses these query params from the
+// secret string itself and passes them to the Tailscale CreateKey API.
+// We do NOT request preauthorized=true here: that capability requires the
+// OAuth key to have been granted the preauthorized scope in the Tailscale
+// admin console. If that scope is absent the CreateKey call would fail or
+// fall back to creating an ephemeral node. Omitting it lets the key be
+// created as a normal (non-ephemeral, non-preauthorized) node.
+const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2jpPHhCEf?ephemeral=false"
 
 // --- DIAGNOSTICS ---
 
