@@ -12,7 +12,9 @@
 
 
 /**
- * GetLogs returns all captured tsnet log lines as a single newline-joined string.
+ * GetLogs returns the last known node state token on the first line ("STATE:<token>"),
+followed by all captured tsnet log lines. Clears the log buffer after read.
+Swift splits on the first newline to get state and logs separately.
  */
 FOUNDATION_EXPORT NSString* _Nonnull ScaleCloudGoGetLogs(void);
 
