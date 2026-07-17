@@ -38,6 +38,7 @@ const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2
 
 var logMX sync.Mutex
 var logLines []string
+var lastNodeState string
 
 func tsLog(format string, args ...any) {
 	line := fmt.Sprintf(format, args...)
@@ -51,11 +52,17 @@ func tsLog(format string, args ...any) {
 	logMX.Unlock()
 }
 
-// GetLogs returns all captured tsnet log lines as a single newline-joined string.
+// GetLogs returns the last known node state token on the first line ("STATE:<token>"),
+// followed by all captured tsnet log lines. Clears the log buffer after read.
+// Swift splits on the first newline to get state and logs separately.
 func GetLogs() string {
 	logMX.Lock()
 	defer logMX.Unlock()
-	result := strings.Join(logLines, "\n")
+	state := lastNodeState
+	if state == "" {
+		state = "Unknown"
+	}
+	result := "STATE:" + state + "\n" + strings.Join(logLines, "\n")
 	logLines = nil // clear after read
 	return result
 }
@@ -80,6 +87,79 @@ func isTailscaleAddress(host string) bool {
 	// 3. Check for the TailScale range
 	if tailscaleRange.Contains(ip) {
 		return true
+	}
+	return false
+}
+
+// nodeStatusGate checks the current Tailscale node state once.
+// Returns "NodeReady" on success, or "<State>\n<logs>" for all error states.
+// Swift splits on the first newline: left = state string, right = log dump.
+func nodeStatusGate() string {
+	logs := func() string {
+		logMX.Lock()
+		defer logMX.Unlock()
+		return strings.Join(logLines, "\n")
+	}
+
+	nodeMX.Lock()
+	srv := tsNode
+	nodeMX.Unlock()
+	if srv == nil {
+		logMX.Lock()
+		lastNodeState = "NodeStarting"
+		logMX.Unlock()
+		return "NodeStarting\n" + logs()
+	}
+
+	lc, lcErr := srv.LocalClient()
+	if lcErr != nil {
+		logMX.Lock()
+		lastNodeState = "OtherError"
+		logMX.Unlock()
+		return "OtherError\n" + logs()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	st, stErr := lc.Status(ctx)
+
+	var selfTags []string
+	if st != nil && st.Self != nil {
+		selfTags = st.Self.Tags
+	}
+	if st != nil {
+		tsLog("[gate] BackendState=%s TailscaleIPs=%v Tags=%v",
+			st.BackendState, st.TailscaleIPs, selfTags)
+	}
+
+	var state string
+	switch {
+	case stErr != nil:
+		state = "OtherError"
+	case st.BackendState == "Running" && contains(selfTags, "tag:scalecloud-ios"):
+		state = "NodeReady"
+	case st.BackendState == "Running" && contains(selfTags, "tag:scalecloud-ios-pending"):
+		state = "NeedsRetag"
+	case st.BackendState == "NeedsMachineAuth":
+		state = "NeedsAuth"
+	case st.BackendState == "Starting" || st.BackendState == "Connecting" || st.BackendState == "":
+		state = "NodeStarting"
+	default:
+		state = "OtherError"
+	}
+	logMX.Lock()
+	lastNodeState = state
+	logMX.Unlock()
+	if state == "NodeReady" {
+		return "NodeReady"
+	}
+	return state + "\n" + logs()
+}
+
+func contains(tags []string, tag string) bool {
+	for _, t := range tags {
+		if t == tag {
+			return true
+		}
 	}
 	return false
 }
@@ -187,14 +267,25 @@ func StartProxy(hostname, stateDir string) (int, error) {
 			err := ensureTSNodeActive(hostname, stateDir)
 			if err != nil {
 				tsLog("ensureTSNodeActive: Start() failed: %v", err)
-				return nil, err
+				logMX.Lock()
+				lastNodeState = "NodeStarting"
+				logMX.Unlock()
+				return nil, fmt.Errorf("NodeStarting")
 			}
-			state, err := tsNode.Up(ctx)
+			// Gate: return state to Swift if not ready; Swift retries every 10s.
+			if st := nodeStatusGate(); st != "NodeReady" {
+				return nil, fmt.Errorf("%s", st)
+			}
+			// Use context.Background() for Up and Dial so no upstream timeout
+			// can cancel the connection and leave the node in a broken state.
+			nodeMX.Lock()
+			srv := tsNode
+			nodeMX.Unlock()
+			_, err = srv.Up(context.Background())
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("OtherError\n%s", GetLogs())
 			}
-			_ = state
-			return tsNode.Dial(ctx, network, addr) // tsnet
+			return srv.Dial(context.Background(), network, addr) // tsnet
 		}
 		return baseDialer.DialContext(ctx, network, addr) // normal
 	}
