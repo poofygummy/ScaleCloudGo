@@ -123,8 +123,8 @@ func nodeStatusGate() string {
 	st, stErr := lc.Status(ctx)
 
 	var selfTags []string
-	if st != nil && st.Self != nil {
-		selfTags = st.Self.Tags
+	if st != nil && st.Self != nil && st.Self.Tags != nil {
+		selfTags = st.Self.Tags.AsSlice()
 	}
 	if st != nil {
 		tsLog("[gate] BackendState=%s TailscaleIPs=%v Tags=%v",
