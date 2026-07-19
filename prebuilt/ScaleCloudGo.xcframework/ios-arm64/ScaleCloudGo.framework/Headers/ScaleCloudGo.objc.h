@@ -20,9 +20,9 @@ FOUNDATION_EXPORT NSString* _Nonnull ScaleCloudGoGetLogs(void);
 
 /**
  * SetSuppressStdout silences all Go/tsnet fmt.Print* output to stdout.
- * Call with YES during iloader injection so only SCALECLOUD_* protocol lines
- * appear; tsnet logs are still captured in-memory and readable via GetLogs().
- * Call with NO for normal app operation.
+Call with true during iloader injection so only SCALECLOUD_* protocol
+lines appear; the tsnet logs are still captured in the in-memory buffer
+and readable via GetLogs(). Call with false for normal app operation.
  */
 FOUNDATION_EXPORT void ScaleCloudGoSetSuppressStdout(BOOL suppress);
 
