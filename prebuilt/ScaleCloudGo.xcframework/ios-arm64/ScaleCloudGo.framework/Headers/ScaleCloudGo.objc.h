@@ -18,6 +18,14 @@ Swift splits on the first newline to get state and logs separately.
  */
 FOUNDATION_EXPORT NSString* _Nonnull ScaleCloudGoGetLogs(void);
 
+/**
+ * SetSuppressStdout silences all Go/tsnet fmt.Print* output to stdout.
+ * Call with YES during iloader injection so only SCALECLOUD_* protocol lines
+ * appear; tsnet logs are still captured in-memory and readable via GetLogs().
+ * Call with NO for normal app operation.
+ */
+FOUNDATION_EXPORT void ScaleCloudGoSetSuppressStdout(BOOL suppress);
+
 FOUNDATION_EXPORT BOOL ScaleCloudGoStartProxy(NSString* _Nullable hostname, NSString* _Nullable stateDir, long* _Nullable ret0_, NSError* _Nullable* _Nullable error);
 
 FOUNDATION_EXPORT BOOL ScaleCloudGoStopProxy(NSError* _Nullable* _Nullable error);

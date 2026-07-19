@@ -39,11 +39,31 @@ const tsClientSecret = "tskey-client-ku5mMZ9zKW11CNTRL-Q3C62fWbKEKTo7aDTC6XDKaU2
 var logMX sync.Mutex
 var logLines []string
 var lastNodeState string
+var suppressStdoutMX sync.Mutex
+var suppressStdoutFlag bool
+
+// SetSuppressStdout silences all Go/tsnet fmt.Print* output to stdout.
+// Call with true during iloader injection so only SCALECLOUD_* protocol
+// lines appear; the tsnet logs are still captured in the in-memory buffer
+// and readable via GetLogs(). Call with false for normal app operation.
+func SetSuppressStdout(suppress bool) {
+	suppressStdoutMX.Lock()
+	suppressStdoutFlag = suppress
+	suppressStdoutMX.Unlock()
+}
+
+func isSuppressed() bool {
+	suppressStdoutMX.Lock()
+	defer suppressStdoutMX.Unlock()
+	return suppressStdoutFlag
+}
 
 func tsLog(format string, args ...any) {
 	line := fmt.Sprintf(format, args...)
-	// Print immediately to stdout so idevicedebug captures it live.
-	fmt.Println("[tsnet]", line)
+	// Only print to stdout when not in injection mode.
+	if !isSuppressed() {
+		fmt.Println("[tsnet]", line)
+	}
 	logMX.Lock()
 	logLines = append(logLines, line)
 	if len(logLines) > 200 {
@@ -208,6 +228,9 @@ func ensureTSNodeActive(hostname, stateDir string) error {
 				nodeMX.Unlock()
 				if !alive {
 					return
+				}
+				if isSuppressed() {
+					continue
 				}
 				lc, err := srv.LocalClient()
 				if err != nil {
