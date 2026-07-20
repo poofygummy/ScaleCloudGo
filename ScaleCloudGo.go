@@ -317,6 +317,21 @@ func StartProxy(hostname, stateDir string) (int, error) {
 	proxy.Tr = &http.Transport{
 		DialContext: smartDial,
 	}
+	// e) Rewrite relative-path requests into absolute URLs so goproxy can
+	// route them. This happens when a client sends e.g.:
+	//   GET /v3/provisioning_session HTTP/1.1
+	//   Host: toth-adattar.tailf2b093.ts.net:6969
+	// instead of the proper proxy form with an absolute URL in the request line.
+	// goproxy's NonproxyHandler fires for exactly these requests.
+	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+		r.URL.Scheme = scheme
+		r.URL.Host = r.Host
+		proxy.ServeHTTP(w, r)
+	})
 	// d) CONNECT tunnel handler — required for HTTPS
 	//    iOS sends CONNECT host:443 for all https:// requests going through a proxy.
 	//    Without this goproxy rejects CONNECT and iOS gets kCFErrorHTTPSProxyConnectionFailure (error 310).
